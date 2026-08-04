@@ -55,6 +55,7 @@
   .newsflash{
     display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;
     padding:10px clamp(16px,4vw,48px) 18px;scroll-behavior:smooth;
+    user-select:none;
   }
   .newsflash::-webkit-scrollbar{ display:none; }
   .news-card{
@@ -315,6 +316,30 @@ const newsObserver = new IntersectionObserver((entries) => {
   });
 }, { root: document.getElementById('newsflash'), threshold: [0, 0.6, 1] });
 newsCards.forEach(c => newsObserver.observe(c));
+
+/* Drag-to-scroll pakai mouse (buat desktop, biar setara sama swipe di HP) */
+(() => {
+  const track = document.getElementById('newsflash');
+  let isDown = false, startX = 0, startScroll = 0, moved = false;
+  track.style.cursor = 'grab';
+  track.addEventListener('mousedown', (e) => {
+    isDown = true; moved = false;
+    startX = e.pageX; startScroll = track.scrollLeft;
+    track.style.cursor = 'grabbing';
+  });
+  window.addEventListener('mouseup', () => {
+    isDown = false; track.style.cursor = 'grab';
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (!isDown) return;
+    e.preventDefault();
+    const dx = e.pageX - startX;
+    if (Math.abs(dx) > 4) moved = true;
+    track.scrollLeft = startScroll - dx;
+  });
+  // cegah klik "nyangkut" ke card pas abis drag (biar nggak keklik nggak sengaja)
+  track.addEventListener('click', (e) => { if (moved) { e.preventDefault(); e.stopPropagation(); } }, true);
+})();
 
 let ALL_LAPTOPS = [];
 let ACTIVE_TAG = 'Semua';
