@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5FAF6;--surface:#FFFFFF;--ink:#14201B;--muted:#5B6B62;--line:#E1EAE3;
+    --neon-teal:#00E0BE;--radius:12px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;}
+  .wrap{max-width:960px;margin:0 auto;padding:24px 16px 60px;}
+  h1{font-family:'Rajdhani',sans-serif;font-size:26px;margin:0 0 20px;}
+
+  /* login */
+  #loginBox{max-width:340px;margin:80px auto;background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--radius);padding:28px;text-align:center;}
+  #loginBox input{width:100%;padding:12px;border:1px solid var(--line);border-radius:8px;margin:12px 0;font-size:14px;}
+  #loginBox button, .btn{
+    background:var(--ink);color:#fff;border:none;padding:11px 18px;border-radius:8px;
+    font-weight:600;cursor:pointer;font-size:14px;
+  }
+  #loginBox button:hover, .btn:hover{box-shadow:0 0 0 2px var(--neon-teal);}
+  #loginErr{color:#D6336C;font-size:13px;margin-top:6px;min-height:16px;}
+
+  /* table */
+  table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:var(--radius);overflow:hidden;}
+  th,td{padding:9px 10px;font-size:13px;text-align:left;border-bottom:1px solid var(--line);}
+  th{background:#EEF7F3;color:#1B6E5B;}
+  tr.terjual{opacity:0.55;}
+  .actions button{margin-right:4px;font-size:12px;padding:5px 9px;border-radius:6px;border:1px solid var(--line);background:#fff;cursor:pointer;}
+  .actions button:hover{border-color:var(--neon-teal);}
+
+  /* form */
+  #formBox{
+    display:none;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px;margin-bottom:20px;
+  }
+  #formBox.show{display:block;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  #formBox label{display:block;font-size:12px;color:var(--muted);margin-bottom:3px;margin-top:8px;}
+  #formBox input, #formBox select, #formBox textarea{
+    width:100%;padding:9px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;font-family:inherit;
+  }
+  #formBox textarea{resize:vertical;min-height:60px;}
+  .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+</style>
+</head>
+<body>
+
+<div id="loginBox">
+  <h1 style="text-align:center;">Masuk Admin</h1>
+  <input type="password" id="pwInput" placeholder="Password admin">
+  <button onclick="doLogin()">Masuk</button>
+  <div id="loginErr"></div>
+</div>
+
+<div class="wrap" id="panelBox" style="display:none;">
+  <div class="top-bar">
+    <h1>Kelola Katalog Laptop</h1>
+    <button class="btn" onclick="openForm()">+ Tambah Laptop</button>
+  </div>
+
+  <div id="formBox">
+    <div class="grid2">
+      <div><label>ID (unik, contoh: LT001, sama dgn nama file foto)</label><input id="f_ID"></div>
+      <div><label>Status</label>
+        <select id="f_Status"><option>Tersedia</option><option>Terjual</option></select>
+      </div>
+      <div><label>Merk</label><input id="f_Merk"></div>
+      <div><label>Model</label><input id="f_Model"></div>
+      <div><label>Tahun</label><input id="f_Tahun"></div>
+      <div><label>Prosesor</label><input id="f_Prosesor"></div>
+      <div><label>RAM</label><input id="f_RAM"></div>
+      <div><label>Storage</label><input id="f_Storage"></div>
+      <div><label>Layar</label><input id="f_Layar"></div>
+      <div><label>Baterai (health/kondisi)</label><input id="f_Baterai"></div>
+      <div><label>Harga dari Supplier (Rp)</label><input id="f_HargaSupplier" type="number"></div>
+      <div><label>Tags (pisah koma: Office,Desain,Gaming Ringan)</label><input id="f_Tags"></div>
+    </div>
+    <label>Kondisi Fisik</label><textarea id="f_KondisiFisik"></textarea>
+    <label>Saran Pemakaian</label><textarea id="f_SaranPemakaian"></textarea>
+    <label>Foto Laptop (wajib saat tambah baru, opsional saat edit jika tidak ganti foto)</label>
+    <input type="file" id="f_foto" accept="image/*">
+    <img id="fotoPreview" style="max-width:180px;border-radius:8px;display:none;margin-top:8px;border:1px solid var(--line);">
+    <div id="fotoStatus" style="font-size:12px;color:var(--muted);margin-top:4px;"></div>
+    <div style="margin-top:14px;">
+      <button class="btn" onclick="submitForm()">Simpan</button>
+      <button onclick="closeForm()" style="margin-left:8px;padding:11px 18px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;">Batal</button>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>ID</th><th>Laptop</th><th>Harga Supplier</th><th>Harga Jual</th><th>Status</th><th>Aksi</th></tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<script>
+/* ================= KONFIGURASI ================= */
+const API_URL = 'https://script.google.com/macros/s/AKfycbxS41SGrAaAlPREqM5p_4NYrHSJj25i6uT6-VCaCnN2lsLdKbRWQz5lgoc8j5Yhs1o/exec';
+/* ================================================= */
+
+let PASSWORD = '';
+let DATA = [];
+let editingRow = null;
+let compressedPhotoData = null; // hasil kompresi foto yang belum ke-submit
+
+function compressImage(file, maxWidth = 1000, quality = 0.75) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('gagal baca file'));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('file bukan gambar valid'));
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+document.getElementById('f_foto').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  const statusEl = document.getElementById('fotoStatus');
+  const previewEl = document.getElementById('fotoPreview');
+  if (!file) { compressedPhotoData = null; previewEl.style.display = 'none'; return; }
+  statusEl.textContent = 'Mengompres foto...';
+  try {
+    compressedPhotoData = await compressImage(file);
+    const kb = Math.round(compressedPhotoData.length * 0.75 / 1024); // estimasi ukuran asli dari base64
+    previewEl.src = compressedPhotoData;
+    previewEl.style.display = 'block';
+    statusEl.textContent = `Siap diupload (~${kb}KB). Cek dulu preview di atas — kalau posisinya miring/salah rotasi, coba ambil ulang fotonya.`;
+  } catch (err) {
+    compressedPhotoData = null;
+    statusEl.textContent = 'Gagal memproses foto, coba file lain.';
+  }
+});
+
+async function doLogin(){
+  const pw = document.getElementById('pwInput').value;
+  const res = await fetch(API_URL, {
+    method:'POST',
+    body: JSON.stringify({ action:'login', password: pw })
+  });
+  const json = await res.json();
+  if(json.ok){
+    PASSWORD = pw;
+    document.getElementById('loginBox').style.display='none';
+    document.getElementById('panelBox').style.display='block';
+    loadData();
+  } else {
+    document.getElementById('loginErr').textContent = 'Password salah.';
+  }
+}
+
+async function loadData(){
+  const res = await fetch(`${API_URL}?action=admin_list&password=${encodeURIComponent(PASSWORD)}`);
+  const json = await res.json();
+  if(!json.ok){ alert('Sesi tidak valid, silakan login ulang.'); location.reload(); return; }
+  DATA = json.data;
+  renderTable();
+}
+
+function renderTable(){
+  document.getElementById('tbody').innerHTML = DATA.map(item => `
+    <tr class="${item.Status==='Terjual'?'terjual':''}">
+      <td>${item.ID}</td>
+      <td>${item.Merk} ${item.Model}</td>
+      <td>Rp ${Number(item.HargaSupplier||0).toLocaleString('id-ID')}</td>
+      <td>Rp ${Number(item.hargaJual||0).toLocaleString('id-ID')}</td>
+      <td>${item.Status}</td>
+      <td class="actions">
+        <button onclick="editItem(${item._row})">Edit</button>
+        <button onclick="toggleStatus(${item._row},'${item.Status==='Terjual'?'Tersedia':'Terjual'}')">${item.Status==='Terjual'?'Set Tersedia':'Set Terjual'}</button>
+        <button onclick="deleteItem(${item._row})">Hapus</button>
+      </td>
+    </tr>`).join('');
+}
+
+function openForm(){
+  editingRow = null;
+  compressedPhotoData = null;
+  document.getElementById('f_foto').value = '';
+  document.getElementById('fotoPreview').style.display = 'none';
+  document.getElementById('fotoStatus').textContent = '';
+  ['ID','Merk','Model','Tahun','Prosesor','RAM','Storage','Layar','Baterai','HargaSupplier','Tags','KondisiFisik','SaranPemakaian']
+    .forEach(f => document.getElementById('f_'+f).value = '');
+  document.getElementById('f_Status').value = 'Tersedia';
+  document.getElementById('formBox').classList.add('show');
+}
+function closeForm(){ document.getElementById('formBox').classList.remove('show'); }
+
+function editItem(row){
+  const item = DATA.find(d => d._row === row);
+  editingRow = row;
+  compressedPhotoData = null;
+  document.getElementById('f_foto').value = '';
+  document.getElementById('fotoStatus').textContent = 'Foto saat ini ditampilkan di bawah. Pilih file baru cuma kalau mau ganti.';
+  const previewEl = document.getElementById('fotoPreview');
+  if(item.foto){ previewEl.src = item.foto; previewEl.style.display = 'block'; } else { previewEl.style.display = 'none'; }
+  Object.keys(item).forEach(k => {
+    const el = document.getElementById('f_'+k);
+    if(el) el.value = item[k];
+  });
+  document.getElementById('formBox').classList.add('show');
+}
+
+async function submitForm(){
+  const fields = ['ID','Merk','Model','Tahun','Prosesor','RAM','Storage','Layar','Baterai','KondisiFisik','HargaSupplier','Tags','SaranPemakaian','Status'];
+  const item = {};
+  fields.forEach(f => item[f] = document.getElementById('f_'+f).value);
+
+  if(!item.ID){ alert('ID wajib diisi.'); return; }
+  if(!editingRow && !compressedPhotoData){ alert('Foto wajib diisi untuk laptop baru.'); return; }
+
+  // upload foto dulu (kalau ada file baru dipilih), baru simpan data laptop
+  if(compressedPhotoData){
+    const uploadRes = await fetch(API_URL, {
+      method:'POST',
+      body: JSON.stringify({ action:'uploadPhoto', password: PASSWORD, id: item.ID, imageBase64: compressedPhotoData })
+    });
+    const uploadJson = await uploadRes.json();
+    if(!uploadJson.ok){ alert('Upload foto gagal, data belum disimpan. Coba lagi.'); return; }
+  }
+
+  const action = editingRow ? 'update' : 'add';
+  const body = { action, password: PASSWORD, item };
+  if(editingRow) body.row = editingRow;
+
+  const res = await fetch(API_URL, { method:'POST', body: JSON.stringify(body) });
+  const json = await res.json();
+  if(json.ok){ closeForm(); loadData(); } else { alert('Gagal menyimpan.'); }
+}
+
+async function toggleStatus(row, status){
+  await fetch(API_URL, { method:'POST', body: JSON.stringify({ action:'toggleStatus', password: PASSWORD, row, status }) });
+  loadData();
+}
+
+async function deleteItem(row){
+  if(!confirm('Yakin mau hapus laptop ini?')) return;
+  await fetch(API_URL, { method:'POST', body: JSON.stringify({ action:'delete', password: PASSWORD, row }) });
+  loadData();
+}
+</script>
+</body>
+</html>
