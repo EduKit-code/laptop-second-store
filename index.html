@@ -50,6 +50,43 @@
   nav a{margin-left:24px;font-size:14px;font-weight:600;text-decoration:none;color:var(--muted);}
   nav a:hover{color:var(--ink);}
 
+  /* ---------- NEWSFLASH ---------- */
+  .newsflash-wrap{ padding:22px 0 8px; }
+  .newsflash{
+    display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;
+    padding:10px clamp(16px,4vw,48px) 18px;scroll-behavior:smooth;
+  }
+  .newsflash::-webkit-scrollbar{ display:none; }
+  .news-card{
+    flex:0 0 clamp(220px,78vw,300px);scroll-snap-align:center;
+    background:var(--surface);border-radius:18px;padding:22px 22px 20px;
+    border:1px solid var(--line);box-shadow:0 8px 20px rgba(20,32,27,0.08);
+    transition:transform .35s ease,opacity .35s ease,box-shadow .35s ease;
+    opacity:0.45;transform:scale(0.88);
+  }
+  .news-card.active{
+    opacity:1;transform:scale(1);
+    box-shadow:0 16px 34px rgba(20,32,27,0.16);
+  }
+  .news-card .icon{ font-size:26px;line-height:1;margin-bottom:10px; }
+  .news-card .tag{
+    font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;
+    color:var(--neon-teal);font-weight:700;margin-bottom:6px;
+  }
+  .news-card h4{
+    font-family:'Rajdhani',sans-serif;font-weight:700;font-size:19px;
+    margin:0 0 8px;line-height:1.25;color:var(--ink);
+  }
+  .news-card p{ font-size:13px;color:var(--muted);line-height:1.55;margin:0; }
+  .newsflash-dots{
+    display:flex;gap:6px;justify-content:center;padding-bottom:4px;
+  }
+  .newsflash-dots span{
+    width:6px;height:6px;border-radius:50%;background:var(--line);
+    transition:background .3s ease,width .3s ease;
+  }
+  .newsflash-dots span.active{ background:var(--neon-teal);width:18px;border-radius:4px; }
+
   /* ---------- FILTER ---------- */
   .filters{
     display:flex;gap:10px;flex-wrap:wrap;
@@ -168,7 +205,8 @@
     background:var(--ink);color:#DCE7E1;padding:32px clamp(16px,4vw,48px);
     display:flex;flex-wrap:wrap;gap:20px;justify-content:space-between;align-items:center;
   }
-  footer .social a{margin-right:14px;font-size:20px;text-decoration:none;}
+  footer .social a{margin-right:14px;color:#DCE7E1;display:inline-flex;align-items:center;text-decoration:none;}
+  footer .social a:hover{color:var(--neon-teal);}
   footer small{color:#8CA79B;}
 </style>
 </head>
@@ -184,6 +222,11 @@
     <a href="#kontak">Kontak</a>
   </nav>
 </header>
+
+<div class="newsflash-wrap">
+  <div class="newsflash" id="newsflash"></div>
+  <div class="newsflash-dots" id="newsflashDots"></div>
+</div>
 
 <div class="filters" id="filters"></div>
 <div class="grid" id="grid"></div>
@@ -208,8 +251,12 @@
     <a id="waFooter" target="_blank" style="color:var(--neon-teal);font-weight:600;text-decoration:none;">Chat via WhatsApp</a>
   </div>
   <div class="social">
-    <a href="#" title="Instagram">📷</a>
-    <a href="#" title="TikTok">🎵</a>
+    <a href="#" title="Instagram" aria-label="Instagram">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+    </a>
+    <a href="#" title="TikTok" aria-label="TikTok">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 2h-3v13.2c0 1.4-1.1 2.5-2.5 2.5s-2.5-1.1-2.5-2.5 1.1-2.5 2.5-2.5c.2 0 .5 0 .7.1v-3.1c-.2 0-.5 0-.7 0-3 0-5.5 2.5-5.5 5.5s2.5 5.5 5.5 5.5 5.5-2.5 5.5-5.5V8.6c1 .7 2.3 1.1 3.5 1.1V6.7c-2 0-3.5-1.6-3.5-3.6V2z"/></svg>
+    </a>
   </div>
   <small>© 2026 REZEKI REBOOT — Semua laptop dicek & bergaransi.</small>
 </footer>
@@ -231,6 +278,43 @@ const FAQ = [
   { q: 'Harga bisa nego?', a: 'Harga yang tertera sudah harga pas dengan margin tetap, tapi silakan tanya lewat WA kalau ada pertanyaan soal harga.' },
   { q: 'Ada laptop khusus desain/gaming ringan?', a: 'Ada — gunakan filter tag di atas katalog (Office / Desain / Gaming Ringan / Multimedia) untuk melihat rekomendasi sesuai kebutuhan.' }
 ];
+
+const NEWSFLASH = [
+  { icon: '💡', tag: 'Tips', title: 'Cek Generasi Prosesor', text: 'Angka setelah i3/i5/i7 itu generasi. Makin besar makin baru & makin ngebut.' },
+  { icon: '⚡', tag: 'Fakta', title: 'i5 Baru vs i7 Lama', text: 'i5 generasi baru bisa ngungguli i7 generasi lama. Generasi lebih penting dari tier.' },
+  { icon: '🎮', tag: 'Gaming', title: 'GPU Itu Kunci', text: 'Buat gaming wajib ada GPU terpisah (GTX/RTX) — bukan cuma grafis bawaan Intel.' },
+  { icon: '🔋', tag: 'Realistis', title: 'Baterai Unit Second', text: 'Wajar di kisaran 1,5–2,5 jam. Unit istimewa bisa sampai 4 jam.' },
+  { icon: '🔌', tag: 'Perawatan', title: 'Waktu Ideal Nge-charge', text: 'Charge saat baterai tersisa ~30%, jangan tunggu sampai benar-benar habis. Ini bantu jaga kesehatan & memperpanjang umur pakai baterainya.' },
+  { icon: '🛡️', tag: 'Jaminan', title: 'Dicek Sebelum Naik', text: 'Tiap unit dicek fisik & fungsi dulu sebelum ditampilkan ke kamu.' },
+  { icon: '🤝', tag: 'Transaksi', title: 'Boleh Cek Dulu', text: 'Nggak asal transfer — boleh ketemu & cek unit langsung sebelum deal.' }
+];
+
+document.getElementById('newsflash').innerHTML = NEWSFLASH.map((n, i) => `
+  <div class="news-card" data-i="${i}">
+    <div class="icon">${n.icon}</div>
+    <div class="tag">${n.tag}</div>
+    <h4>${n.title}</h4>
+    <p>${n.text}</p>
+  </div>
+`).join('');
+document.getElementById('newsflashDots').innerHTML = NEWSFLASH.map((_, i) =>
+  `<span data-i="${i}"></span>`
+).join('');
+
+const newsCards = [...document.querySelectorAll('.news-card')];
+const newsDots = [...document.querySelectorAll('.newsflash-dots span')];
+const newsObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const i = entry.target.dataset.i;
+    if (entry.intersectionRatio > 0.6) {
+      entry.target.classList.add('active');
+      newsDots.forEach(d => d.classList.toggle('active', d.dataset.i === i));
+    } else {
+      entry.target.classList.remove('active');
+    }
+  });
+}, { root: document.getElementById('newsflash'), threshold: [0, 0.6, 1] });
+newsCards.forEach(c => newsObserver.observe(c));
 
 let ALL_LAPTOPS = [];
 let ACTIVE_TAG = 'Semua';
@@ -270,7 +354,7 @@ function renderGrid(){
       </div>
       <div class="info">
         <div class="title">${l.merk} ${l.model}</div>
-        <div class="specs">${l.prosesor} · ${l.ram} · ${l.storage}</div>
+        <div class="specs">${l.prosesor} · ${l.ram} · ${l.storage}${l.gpu ? ' · '+l.gpu : ''}</div>
         <div class="tag-row">${l.tags.map(t=>`<span>${t}</span>`).join('')}</div>
         <div class="price">Rp ${Number(l.harga).toLocaleString('id-ID')}</div>
       </div>
@@ -289,6 +373,7 @@ function openModal(l){
       <div class="price">Rp ${Number(l.harga).toLocaleString('id-ID')}</div>
       <table class="spec-table">
         <tr><td>Prosesor</td><td>${l.prosesor}</td></tr>
+        ${l.gpu ? `<tr><td>GPU</td><td>${l.gpu}</td></tr>` : ''}
         <tr><td>RAM</td><td>${l.ram}</td></tr>
         <tr><td>Storage</td><td>${l.storage}</td></tr>
         <tr><td>Layar</td><td>${l.layar}</td></tr>

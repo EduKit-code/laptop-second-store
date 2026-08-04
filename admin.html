@@ -75,6 +75,7 @@
       <div><label>Model</label><input id="f_Model"></div>
       <div><label>Tahun</label><input id="f_Tahun"></div>
       <div><label>Prosesor</label><input id="f_Prosesor"></div>
+      <div><label>GPU (kosongkan kalau tanpa GPU terpisah/cuma Intel HD)</label><input id="f_GPU"></div>
       <div><label>RAM</label><input id="f_RAM"></div>
       <div><label>Storage</label><input id="f_Storage"></div>
       <div><label>Layar</label><input id="f_Layar"></div>
@@ -198,7 +199,7 @@ function openForm(){
   document.getElementById('f_foto').value = '';
   document.getElementById('fotoPreview').style.display = 'none';
   document.getElementById('fotoStatus').textContent = '';
-  ['ID','Merk','Model','Tahun','Prosesor','RAM','Storage','Layar','Baterai','HargaSupplier','Tags','KondisiFisik','SaranPemakaian']
+  ['ID','Merk','Model','Tahun','Prosesor','GPU','RAM','Storage','Layar','Baterai','HargaSupplier','Tags','KondisiFisik','SaranPemakaian']
     .forEach(f => document.getElementById('f_'+f).value = '');
   document.getElementById('f_Status').value = 'Tersedia';
   document.getElementById('formBox').classList.add('show');
@@ -221,7 +222,7 @@ function editItem(row){
 }
 
 async function submitForm(){
-  const fields = ['ID','Merk','Model','Tahun','Prosesor','RAM','Storage','Layar','Baterai','KondisiFisik','HargaSupplier','Tags','SaranPemakaian','Status'];
+  const fields = ['ID','Merk','Model','Tahun','Prosesor','GPU','RAM','Storage','Layar','Baterai','KondisiFisik','HargaSupplier','Tags','SaranPemakaian','Status'];
   const item = {};
   fields.forEach(f => item[f] = document.getElementById('f_'+f).value);
 
