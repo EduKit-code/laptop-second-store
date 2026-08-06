@@ -88,12 +88,19 @@
   }
   .newsflash-dots span.active{ background:var(--neon-teal);width:18px;border-radius:4px; }
 
-  /* ---------- FILTER ---------- */
-  .filters{
-    display:flex;gap:10px;flex-wrap:wrap;
-    padding:20px clamp(16px,4vw,48px) 4px;
+  /* ---------- SEARCH ---------- */
+  .search-wrap{ padding:4px clamp(16px,4vw,48px) 0; }
+  #searchBox{
+    width:100%;padding:11px 16px;border-radius:10px;border:1px solid var(--line);
+    background:var(--surface);font-size:14px;font-family:'Inter',sans-serif;color:var(--ink);
   }
+  #searchBox:focus{ outline:none;border-color:var(--neon-teal);box-shadow:0 0 0 3px rgba(0,168,160,0.15); }
+
+  /* ---------- FILTER ---------- */
+  .filter-wrap{ padding:14px clamp(16px,4vw,48px) 10px; }
+  .filter-top{ display:flex;gap:8px;flex-wrap:wrap;align-items:center; }
   .chip{
+    flex:0 0 auto;white-space:nowrap;
     padding:8px 16px;border-radius:999px;border:1px solid var(--line);
     background:var(--surface);font-size:13px;font-weight:600;cursor:pointer;
     transition:all .2s;color:var(--muted);
@@ -102,6 +109,16 @@
     border-color:var(--neon-teal);color:var(--ink);
     box-shadow:0 0 0 1px var(--neon-teal), 0 0 12px rgba(0,168,160,0.35);
   }
+  .chip-more{
+    padding:8px 16px;border-radius:999px;border:1px dashed var(--muted);
+    background:transparent;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);
+  }
+  .chip-more:hover{ border-color:var(--neon-teal);color:var(--neon-teal); }
+  .filter-more{
+    display:none;flex-wrap:wrap;gap:8px;margin-top:10px;padding:12px;
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  }
+  .filter-more.open{ display:flex; }
 
   /* ---------- GRID ---------- */
   .grid{
@@ -143,7 +160,8 @@
     font-family:'JetBrains Mono',monospace;font-weight:600;font-size:16px;
     color:var(--ink);margin-top:auto;
   }
-  .tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;}
+  .tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;max-height:44px;overflow:hidden;}
+  .tag-row span.more{ background:#EFEFEC;color:var(--muted); }
   .tag-row span{
     font-size:10.5px;background:#EEF7F3;color:#1B6E5B;padding:3px 8px;border-radius:999px;font-weight:600;
   }
@@ -229,7 +247,14 @@
   <div class="newsflash-dots" id="newsflashDots"></div>
 </div>
 
-<div class="filters" id="filters"></div>
+<div class="search-wrap">
+  <input type="text" id="searchBox" placeholder="Cari merk, model, atau prosesor...">
+</div>
+
+<div class="filter-wrap">
+  <div class="filter-top" id="filterTop"></div>
+  <div class="filter-more" id="filterMore"></div>
+</div>
 <div class="grid" id="grid"></div>
 
 <div class="overlay" id="overlay">
@@ -318,8 +343,7 @@ const newsObserver = new IntersectionObserver((entries) => {
 newsCards.forEach(c => newsObserver.observe(c));
 
 /* Drag-to-scroll pakai mouse (buat desktop, biar setara sama swipe di HP) */
-(() => {
-  const track = document.getElementById('newsflash');
+function enableDragScroll(track){
   let isDown = false, startX = 0, startScroll = 0, moved = false;
   track.style.cursor = 'grab';
   track.addEventListener('mousedown', (e) => {
@@ -337,12 +361,13 @@ newsCards.forEach(c => newsObserver.observe(c));
     if (Math.abs(dx) > 4) moved = true;
     track.scrollLeft = startScroll - dx;
   });
-  // cegah klik "nyangkut" ke card pas abis drag (biar nggak keklik nggak sengaja)
   track.addEventListener('click', (e) => { if (moved) { e.preventDefault(); e.stopPropagation(); } }, true);
-})();
+}
+enableDragScroll(document.getElementById('newsflash'));
 
 let ALL_LAPTOPS = [];
 let ACTIVE_TAG = 'Semua';
+let SEARCH_QUERY = '';
 
 async function loadCatalog(){
   try{
@@ -355,22 +380,53 @@ async function loadCatalog(){
   }
 }
 
+const POPULAR_LIMIT = 5; // jumlah tag populer yang tampil langsung, sisanya di balik "Filter lainnya"
+
 function renderFilters(){
-  const tagSet = new Set(['Semua']);
-  ALL_LAPTOPS.forEach(l => l.tags.forEach(t => tagSet.add(t)));
-  const box = document.getElementById('filters');
-  box.innerHTML = [...tagSet].map(t =>
-    `<div class="chip ${t===ACTIVE_TAG?'active':''}" data-tag="${t}">${t}</div>`
-  ).join('');
-  box.querySelectorAll('.chip').forEach(chip=>{
+  const freq = {};
+  ALL_LAPTOPS.forEach(l => l.tags.forEach(t => { freq[t] = (freq[t]||0) + 1; }));
+  const sorted = Object.keys(freq).sort((a,b) => freq[b]-freq[a]);
+  const popular = sorted.slice(0, POPULAR_LIMIT);
+  const rest = sorted.slice(POPULAR_LIMIT);
+
+  const chipHtml = (t) => `<button class="chip ${t===ACTIVE_TAG?'active':''}" data-tag="${t}">${t}</button>`;
+
+  const top = document.getElementById('filterTop');
+  top.innerHTML = `<button class="chip ${ACTIVE_TAG==='Semua'?'active':''}" data-tag="Semua">Semua</button>`
+    + popular.map(chipHtml).join('')
+    + (rest.length ? `<button class="chip-more" id="moreBtn">Filter lainnya (${rest.length}) ▾</button>` : '');
+
+  const moreBox = document.getElementById('filterMore');
+  moreBox.innerHTML = rest.map(chipHtml).join('');
+
+  [...top.querySelectorAll('.chip'), ...moreBox.querySelectorAll('.chip')].forEach(chip=>{
     chip.onclick = () => { ACTIVE_TAG = chip.dataset.tag; renderFilters(); renderGrid(); };
   });
+
+  const moreBtn = document.getElementById('moreBtn');
+  if(moreBtn){
+    moreBtn.onclick = () => {
+      moreBox.classList.toggle('open');
+      moreBtn.textContent = moreBox.classList.contains('open')
+        ? `Filter lainnya (${rest.length}) ▴` : `Filter lainnya (${rest.length}) ▾`;
+    };
+  }
 }
 
+document.getElementById('searchBox').addEventListener('input', (e) => {
+  SEARCH_QUERY = e.target.value;
+  renderGrid();
+});
+
 function renderGrid(){
-  const list = ACTIVE_TAG === 'Semua' ? ALL_LAPTOPS : ALL_LAPTOPS.filter(l => l.tags.includes(ACTIVE_TAG));
+  const q = SEARCH_QUERY.trim().toLowerCase();
+  const list = ALL_LAPTOPS.filter(l => {
+    const tagMatch = ACTIVE_TAG === 'Semua' || l.tags.includes(ACTIVE_TAG);
+    const searchMatch = !q || `${l.merk} ${l.model} ${l.prosesor}`.toLowerCase().includes(q);
+    return tagMatch && searchMatch;
+  });
   const grid = document.getElementById('grid');
-  if(list.length === 0){ grid.innerHTML = '<p>Belum ada laptop untuk kategori ini.</p>'; return; }
+  if(list.length === 0){ grid.innerHTML = '<p>Belum ada laptop yang cocok. Coba kata kunci atau filter lain.</p>'; return; }
   grid.innerHTML = list.map((l, i) => `
     <div class="card ${l.status==='Terjual'?'terjual':''}" data-idx="${i}" data-tag="${ACTIVE_TAG}">
       <div class="photo-wrap">
@@ -380,7 +436,7 @@ function renderGrid(){
       <div class="info">
         <div class="title">${l.merk} ${l.model}</div>
         <div class="specs">${l.prosesor} · ${l.ram} · ${l.storage}${l.gpu ? ' · '+l.gpu : ''}</div>
-        <div class="tag-row">${l.tags.map(t=>`<span>${t}</span>`).join('')}</div>
+        <div class="tag-row">${l.tags.slice(0,3).map(t=>`<span>${t}</span>`).join('')}${l.tags.length>3?`<span class="more">+${l.tags.length-3}</span>`:''}</div>
         <div class="price">Rp ${Number(l.harga).toLocaleString('id-ID')}</div>
       </div>
     </div>
