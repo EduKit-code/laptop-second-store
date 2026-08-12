@@ -65,6 +65,11 @@
     <button class="btn" onclick="openForm()">+ Tambah Laptop</button>
   </div>
 
+  <div id="statsBar" style="display:flex;gap:24px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 20px;margin-bottom:16px;">
+    <div><div style="font-size:12px;color:var(--muted);">Total Kunjungan</div><div id="statTotalVisits" style="font-size:22px;font-weight:700;color:#1B6E5B;">–</div></div>
+    <div><div style="font-size:12px;color:var(--muted);">Pengunjung Unik</div><div id="statUniqueVisitors" style="font-size:22px;font-weight:700;color:#1B6E5B;">–</div></div>
+  </div>
+
   <div id="formBox">
     <div class="grid2">
       <div><label>ID (unik, contoh: LT001, sama dgn nama file foto)</label><input id="f_ID"></div>
@@ -97,7 +102,7 @@
 
   <table>
     <thead>
-      <tr><th>ID</th><th>Laptop</th><th>Harga Supplier</th><th>Harga Jual</th><th>Status</th><th>Aksi</th></tr>
+      <tr><th>ID</th><th>Laptop</th><th>Harga Supplier</th><th>Harga Jual</th><th>Dilihat</th><th>Status</th><th>Aksi</th></tr>
     </thead>
     <tbody id="tbody"></tbody>
   </table>
@@ -174,6 +179,8 @@ async function loadData(){
   const json = await res.json();
   if(!json.ok){ alert('Sesi tidak valid, silakan login ulang.'); location.reload(); return; }
   DATA = json.data;
+  document.getElementById('statTotalVisits').textContent = json.totalVisits ?? 0;
+  document.getElementById('statUniqueVisitors').textContent = json.uniqueVisitors ?? 0;
   renderTable();
 }
 
@@ -184,6 +191,7 @@ function renderTable(){
       <td>${item.Merk} ${item.Model}</td>
       <td>Rp ${Number(item.HargaSupplier||0).toLocaleString('id-ID')}</td>
       <td>Rp ${Number(item.hargaJual||0).toLocaleString('id-ID')}</td>
+      <td>${item.views || 0}x</td>
       <td>${item.Status}</td>
       <td class="actions">
         <button onclick="editItem(${item._row})">Edit</button>
