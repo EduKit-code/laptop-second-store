@@ -302,6 +302,24 @@ const waLink = (msg) => `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(ms
 document.getElementById('waFooter').href = waLink('Halo, saya mau tanya-tanya soal laptop second di EDUKIT LAPTOP');
 document.getElementById('waFallback').href = waLink('Halo, saya mau tanya soal laptop second.');
 
+/* ---------- TRACKING (anonim, cuma buat hitung traffic & views per kartu) ---------- */
+function getVisitorId(){
+  let vid = localStorage.getItem('ekVid');
+  if(!vid){
+    vid = 'v_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+    localStorage.setItem('ekVid', vid);
+  }
+  return vid;
+}
+function trackVisit(){
+  const vid = getVisitorId();
+  fetch(`${API_URL}?action=track_visit&vid=${encodeURIComponent(vid)}`).catch(()=>{});
+}
+function trackView(laptopId){
+  const vid = getVisitorId();
+  fetch(`${API_URL}?action=track_view&vid=${encodeURIComponent(vid)}&id=${encodeURIComponent(laptopId)}`).catch(()=>{});
+}
+
 const FAQ = [
   { q: 'Apakah laptopnya bergaransi?', a: 'Setiap unit sudah dicek fisik & fungsi sebelum dijual, dan diberi garansi toko. Detail masa garansi dikonfirmasi lewat WA sebelum transaksi.' },
   { q: 'Bisa COD atau cuma transfer?', a: 'Bisa keduanya — COD untuk area tertentu, atau transfer bank dengan konfirmasi via WA.' },
@@ -453,6 +471,7 @@ function renderGrid(){
 }
 
 function openModal(l){
+  trackView(l.id);
   document.getElementById('modalContent').innerHTML = `
     <div class="photo-wrap"><img src="${l.foto || 'https://placehold.co/600x375?text=Foto+Belum+Ada'}" alt="${l.merk} ${l.model}"></div>
     <div class="modal-body">
@@ -493,6 +512,7 @@ chatBody.querySelectorAll('.faq-q').forEach(el=>{
 document.getElementById('chatBubble').onclick = () => document.getElementById('chatPanel').classList.toggle('show');
 
 loadCatalog();
+trackVisit();
 </script>
 </body>
 </html>
